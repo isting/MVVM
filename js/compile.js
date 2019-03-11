@@ -43,7 +43,6 @@ class Compile {
     let attrs = node.attributes
     Array.from(attrs).forEach(el => {
       if(this.isDirective(el.name)) {
-        // console.log(el.value)
         let expr = el.value
         let [, type] = el.name.split('-')
         CompileUtil[type](node, this.vm, expr)
@@ -54,7 +53,6 @@ class Compile {
     let Text = node.textContent
     let reg = /\{\{[^{]*\}\}/g;
     if(reg.test(Text)) {
-      // console.log(node);
       CompileUtil['text'](node, this.vm, Text)
     }
   }
@@ -63,13 +61,12 @@ class Compile {
 CompileUtil = {
   getVal(vm, expr) {
     expr = expr.split(".")
-
     return expr.reduce((prev, next) => {
       return prev[next]
     }, vm.$data)
   },
   getTextValue(expr, vm) { // 这里有点问题 {{}} 没替换
-    return expr.replace(/\{\{^}*\}\}/g, (...arguments) => {
+    return expr.replace(/\{\{([^}]+)\}\}/g, (...arguments) => {
       return this.getVal(vm, arguments[1])
     })
   },
@@ -77,8 +74,8 @@ CompileUtil = {
     // node当前节点  vm当前实例  expr data key值
     let updateFn = this.updater["textUpdater"]
     let value = this.getTextValue(expr, vm)
-
-    expr.replace(/\{\{^}*\}\}/g, (...arguments) => {  // 这个地方很绕  研究下
+ 
+    expr.replace(/\{\{([^}]+)\}\}/g, (...arguments) => {  // 这个地方很绕  研究下
       new Watcher(vm, arguments[1], (newValue) => {
         updateFn && updateFn(node, this.getTextVal(vm, expr))
       })
@@ -90,7 +87,6 @@ CompileUtil = {
     expr = expr.split('.')
     return expr.reduce((prev, next, currentIndex) => {
       if(currentIndex === expr.length-1) {
-        console.log(vm.$data.InputEle)
         return prev[next] = value
       }
       return prev[next]
